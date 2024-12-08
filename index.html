@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="vocal-talent.png" type="image/x-icon">
+    <title>VocalizeAI</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+    </style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Zilla+Slab:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+    </style>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Parkinsans:wght@300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Zilla+Slab:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+    </style>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Montserrat;
+            background: #f0f0f0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.3);
+            /* Glass effect */
+            backdrop-filter: blur(10px);
+            /* Glass blur effect */
+            width: 500px;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            color: #333;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-family: Zilla Slab;
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        input {
+            margin-bottom: 10px;
+            font-family: Montserrat;
+        }
+
+        button {
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            transition: background-color 0.3s ease;
+            font-family: Parkinsans;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        label {
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+                /* Make container width 90% of the screen */
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 20px;
+                /* Adjust heading font size for smaller screens */
+            }
+
+            input,
+            select,
+            button {
+                font-size: 14px;
+                /* Adjust input, select, and button font sizes */
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                width: 95%;
+                /* Container width becomes 95% for very small screens */
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 18px;
+                /* Smaller heading size on very small screens */
+            }
+
+            input,
+            select,
+            button {
+                font-size: 12px;
+                /* Further reduce font size */
+                padding: 8px;
+                /* Adjust padding for very small screens */
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Introduction to Text-to-Speech (TTS) Technology</h1>
+
+        <!-- Text input for the user to enter text -->
+        <input type="text" id="textInput" placeholder="Enter text here...">
+
+        <!-- Dropdown for selecting voice -->
+        <label for="voiceSelect">Choose a voice:</label>
+        <select id="voiceSelect"></select>
+
+        <br><br>
+
+        <!-- Button to trigger text-to-speech -->
+        <button onclick="speakText()">Speak Text</button>
+        <!-- Button to download the audio -->
+        <button onclick="downloadAudio()">Download Audio</button>
+    </div>
+
+    <script>
+        let voices = [];
+        let audioBlob = null;
+        let audioUrl = null;
+
+        // Populate voices
+        function populateVoiceList() {
+            voices = window.speechSynthesis.getVoices();
+            const voiceSelect = document.getElementById('voiceSelect');
+            voiceSelect.innerHTML = '';
+            voices.forEach(voice => {
+                let option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = voice.name;
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        // Ensure voices are available
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = populateVoiceList;
+        }
+        populateVoiceList();
+
+        // Function to trigger text-to-speech and capture audio
+        function speakText() {
+            const text = document.getElementById('textInput').value;
+            if (text === "") {
+                alert("Please enter some text!");
+                return;
+            }
+
+            const selectedVoiceName = document.getElementById('voiceSelect').value;
+            const selectedVoice = voices.find(voice => voice.name === selectedVoiceName);
+
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.voice = selectedVoice;
+            speech.rate = 1;
+            speech.pitch = 1;
+
+            // Using Web Audio API to capture audio and create a Blob
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const mediaStreamDestination = audioContext.createMediaStreamDestination();
+            const mediaRecorder = new MediaRecorder(mediaStreamDestination.stream);
+
+            mediaRecorder.ondataavailable = function (event) {
+                audioBlob = event.data;
+                audioUrl = URL.createObjectURL(audioBlob);
+            };
+
+            mediaRecorder.start();
+            window.speechSynthesis.speak(speech);
+            speech.onend = () => {
+                mediaRecorder.stop();
+            };
+        }
+
+        // Function to download the captured audio as a file
+        function downloadAudio() {
+            if (!audioBlob) {
+                alert("No audio to download!");
+                return;
+            }
+            const link = document.createElement('a');
+            link.href = audioUrl;
+            link.download = 'speech_audio.wav';
+            link.click();
+        }
+    </script>
+
+</body>
+
+</html>
